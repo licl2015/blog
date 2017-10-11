@@ -3,3 +3,54 @@ layout: default
 title: test title
 ---
 <p>Hello world!</p>
+
+2017-10-11日工作任务
+1.昨天学习Java中多线程中并发中锁，包括synchronized和lock 
+  分别介绍各自锁的形式，
+  synchronized是隐式锁，锁对象是Object对象，在对象上有两种队列，同步队列和等待队列来对线程进行缓存
+  加锁之前进入同步队列，获取锁线程调用wait方法进入等待队列，并在此时隐式释放锁，其他线程进入该锁，调用notify将等待队列中的线程唤醒，从wait返回继续执行
+  
+  lock是显式锁，有自己的加锁和解锁的方式 lock.lock lock.unlock  lock使用的同步队列，是通过AbstractQueueSynchronizder同步器实现的，其中包含了对多线程访问的同步队列管理
+  这样多线程访问时，获取锁失败的线程都转换为Node存储在同步队列中，当获取锁的那个线程执行完毕，释放锁在进行第二次锁占用，这里占用可以分为公平锁和非公平锁，公平锁即等待时间最长的那个优先u
+  获取锁，采用双向链表存储，每次加入链表的最后一个节点上（这里为什么要进行自旋），非公平锁就是要去抢占锁
+  常用的锁是重入锁ReentranLock 即一个线程在获取锁之后可以在此进入获得锁，那么就是锁的嵌套，synchronized也是重入锁，但是为隐式的锁
+  通过同步器可以将锁进行分类 独占锁，共享锁，和另一种 通过控制getState setState compareAndSet实现CAS原子性的操作，
+  独占锁在int整型变量上控制两个状态就可以，一个是持有，一个是释放
+  共享锁要在int整型变量上控制多种状态，例如让两个线程同时访问一段共享变量，就要设置3三种状态：为获取0 已经获取1个，全部已经获取2，但这种锁不具备重入型
+  使用共享锁为了能够重入需在一个整型变量上控制多种状态，如读多写少的情况，则要按位切割使用的，一个int整型有4个字节 32位，用高16位代表读，低16位代表写，
+  使用S & 0x0000FFFF 获取将高16位抹去，获取低16位（写状态） 写增加 S+1 读增加 S+（1<<16）读状态 S>>>16无符号右移
+  
+  ConcurrentHashMap 的原理 ，使用分段锁技术 segment数组 hashMap（数组+链表）
+  分段锁技术用的是锁segment数组 锁segment数组中的一个元素
+  HashMap或是ConcurrentHashMap是如何进行散列的
+  确定数组的长度length，要进行散列的范围，进行二进制码，进行散列
+  hash &（length - 1）length保证为2的倍数 2进制数 1111为15，也就是2进制倍数-1可以得到一个 前面都是0000后面都是1111的mask掩码
+  hash & mask 与掩码 1位不变 0位全为零，去掉高位剩余低位，
+  为什么hash值我们不用管他的大小呢，因为再大的数&Mask与上掩码，都获取的掩码长度的值
+  
+  hash进行Collections.sounddary(hash)二次散列，减少碰撞机率
+  ssize保证为2的倍数，sshift为2倍数次幂
+  segmentShift = 32 - sshift;
+  segmentMask = ssize - 1;
+   获取高位数 & 掩码 = 具体数值 
+  (hash >>> segmentShift) & segmentMask
+  get：使用key的hash值进行二次散列，再用上面进行获取segment数组的下标，用hash值获取hashmap中位置
+       这里为什么没有加锁，因为Java内存模型Happy-before原则，写在读之前 volatile使用count，HashEntry value
+       ??
+  put：必须加锁，1判断是否超过了segment的总数，2.超过进行扩容 ，对单个segment进行扩容     
+  size；也将get，put锁住，现在不用，计算多次每一个segment大小和总数对比，如果没有变化
+  
+2.Java线程间通信是通过共享内存的形式修改共享内存结果通知对方的形式，达到通信的目的 wait／notify机制
+
+
+
+
+
+刻意学习总结：
+步骤:
+    1.有明确目标
+    2.有经典书籍对照
+    3.不断总结，自己思路和高手的差距在哪里，这么思考为什么不对
+    4.高强度训练
+  
+  
